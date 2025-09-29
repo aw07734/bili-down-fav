@@ -5,9 +5,8 @@ import (
 )
 
 const (
-	IniPath  = "assets/config.ini"
-	UserPath = "assets/user.ini"
-	QrPath   = "assets/qr.png"
+	IniPath = "assets/config.ini"
+	QrPath  = "assets/qr.png"
 )
 
 var file, _ = ini.Load(IniPath)
