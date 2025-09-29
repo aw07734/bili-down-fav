@@ -31,20 +31,25 @@ func Download(bvid string) {
 	if len(vinfo.Data.Pages) > 1 {
 		for _, page := range vinfo.Data.Pages {
 			owner := vinfo.Data.Owner
-			title := vinfo.Data.Title + "(" + bvid + ")"
+			title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
 			context := owner.Name + "(" + strconv.Itoa(owner.Mid) + ")/" + title
-			download_page(bvid, page.Part, page.Cid, context)
+			download_page(bvid, makeTitleLegal(page.Part), context, page.Cid)
 		}
 	} else {
 		owner := vinfo.Data.Owner
-		title := vinfo.Data.Title + "(" + bvid + ")"
+		title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
 		context := owner.Name + "(" + strconv.Itoa(owner.Mid) + ")"
-		download_page(bvid, title, vinfo.Data.Cid, context)
+		download_page(bvid, title, context, vinfo.Data.Cid)
 	}
 
 }
 
-func download_page(bvid string, title string, cid int, context string) {
+func download_page(bvid, title, context string, cid int) {
+	oFile := outputFile(title, context)
+	if fileExist(oFile) {
+		log.Println("跳过:", title)
+		return
+	}
 	url := "https://api.bilibili.com/x/player/playurl"
 	info := new(PlayInfo)
 	var fnval uint = 16 | 64 | 256 | 512 | 1024 | 2048
@@ -112,11 +117,10 @@ func download_page(bvid string, title string, cid int, context string) {
 	}
 }
 
-func toFile(bvid string, title string, context string, vUrl string, vBackupUrl []string, hasAudio bool, aUrl string, aBackupUrl []string) {
+func toFile(bvid, title, context, vUrl string, vBackupUrl []string, hasAudio bool, aUrl string, aBackupUrl []string) {
 	vFile := conf.Get("file", "temp_dir") + "/video_" + title + ".m4s"
 	aFile := conf.Get("file", "temp_dir") + "/audio_" + title + ".m4s"
 
-	oFile := conf.Get("file", "out_dir") + "/" + context + "/" + title + ".mkv"
 	// 下载视频
 	if err := download(vUrl, vFile); err != nil {
 		log.Println("视频下载失败，使用备用地址：", title)
@@ -158,6 +162,7 @@ func toFile(bvid string, title string, context string, vUrl string, vBackupUrl [
 	}
 
 	// log.Println("混流")
+	oFile := outputFile(title, context)
 	if hasAudio {
 		util.Combine(vFile, aFile, oFile)
 	} else {
@@ -172,7 +177,7 @@ func toFile(bvid string, title string, context string, vUrl string, vBackupUrl [
 	util.LogSuccess(bvid, title)
 }
 
-func download(url string, name string) error {
+func download(url, name string) error {
 	// log.Println(name, "下载开始")
 	if resp, err := util.Http.R().
 		SetOutput(name).
@@ -187,4 +192,33 @@ func download(url string, name string) error {
 		log.Println(name, "下载失败", err)
 		return err
 	}
+}
+
+func makeTitleLegal(str string) string {
+	result := ""
+	for _, v := range str {
+		letter := string(v)
+		switch letter {
+		case "/", "\\", ":", "*", "?", "\"", "|":
+			result += "_"
+		case "<":
+			result += "["
+		case ">":
+			result += "]"
+		default:
+			result += letter
+		}
+	}
+	return result
+}
+
+func outputFile(title, context string) string {
+	return conf.Get("file", "out_dir") + "/" + context + "/" + title + ".mkv"
+}
+
+func fileExist(filePath string) bool {
+	if _, err := os.Stat(filePath); err == nil {
+		return true
+	}
+	return false
 }
