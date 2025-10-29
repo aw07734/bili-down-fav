@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 var success chan string
@@ -16,8 +17,9 @@ var fw *bufio.Writer
 func init() {
 	success = make(chan string)
 	fail = make(chan string)
-	os.Remove(conf.Get("log", "success"))
-	os.Remove(conf.Get("log", "fail"))
+	os.Remove(filepath.Join(conf.ExecDir, conf.Get("log", "success")))
+	os.Remove(filepath.Join(conf.ExecDir, conf.Get("log", "fail")))
+	os.MkdirAll(filepath.Dir(conf.Get("log", "success")), os.ModePerm)
 	sFile, _ := os.Create(conf.Get("log", "success"))
 	fFile, _ := os.Create(conf.Get("log", "fail"))
 	sw = bufio.NewWriter(sFile)

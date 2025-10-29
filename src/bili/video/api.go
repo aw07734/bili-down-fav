@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -62,7 +63,7 @@ func download_page(bvid, title, context string, cid int) {
 		Get(url); err == nil {
 
 		// 保存json文件
-		jsonDir := conf.Get("file", "json_dir")
+		jsonDir := filepath.Join(conf.ExecDir, conf.Get("file", "json_dir"))
 		if jsonDir != "" {
 			os.MkdirAll(jsonDir, os.ModePerm)
 			os.WriteFile(jsonDir+"/"+bvid+"_video.json", resp.Body(), fs.ModePerm)
@@ -118,8 +119,9 @@ func download_page(bvid, title, context string, cid int) {
 }
 
 func toFile(bvid, title, context, vUrl string, vBackupUrl []string, hasAudio bool, aUrl string, aBackupUrl []string) {
-	vFile := conf.Get("file", "temp_dir") + "/video_" + title + ".m4s"
-	aFile := conf.Get("file", "temp_dir") + "/audio_" + title + ".m4s"
+	prefix := filepath.Join(conf.ExecDir, conf.Get("file", "temp_dir"))
+	vFile := prefix + "/video_" + title + ".m4s"
+	aFile := prefix + "/audio_" + title + ".m4s"
 
 	// 下载视频
 	if err := download(vUrl, vFile); err != nil {
@@ -213,7 +215,7 @@ func makeTitleLegal(str string) string {
 }
 
 func outputFile(title, context string) string {
-	return conf.Get("file", "out_dir") + "/" + context + "/" + title + ".mkv"
+	return filepath.Join(conf.ExecDir, conf.Get("file", "out_dir")+"/"+context+"/"+title+".mkv")
 }
 
 func fileExist(filePath string) bool {

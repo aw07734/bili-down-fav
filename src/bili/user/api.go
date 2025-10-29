@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -21,8 +22,10 @@ func Login(callback func()) {
 func CurrentUser() *Info {
 	url := "https://api.bilibili.com/x/web-interface/nav"
 	userInfo := new(Info)
+	log.Println("开始获取用户信息")
 	if resp, err := util.Http.R().
 		Get(url); err == nil {
+		log.Println("结束获取用户信息")
 		json.Unmarshal(resp.Body(), userInfo)
 	}
 	return userInfo
@@ -67,7 +70,7 @@ func qr() string {
 	if resp, err := util.Http.R().Get(url); err == nil {
 		json.Unmarshal(resp.Body(), qrUrl)
 	}
-	if err := qrcode.WriteFile(qrUrl.Data.Url, qrcode.Medium, 256, conf.QrPath); err != nil {
+	if err := qrcode.WriteFile(qrUrl.Data.Url, qrcode.Medium, 256, filepath.Join(conf.ExecDir, conf.QrPath)); err != nil {
 		log.Println("生成二维码失败：", err)
 		return ""
 	}

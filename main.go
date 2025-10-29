@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 )
@@ -17,6 +18,7 @@ func main() {
 	curUser := user.CurrentUser().Data
 	if curUser.IsLogin {
 		fmt.Println("当前用户：" + curUser.Uname)
+		fmt.Println("当前收藏夹：" + conf.Get("fav", "d_folder"))
 		favs := fav.ListForDownloads(fav.ListFavFolder(curUser.Mid))
 		ctx, cancel := context.WithCancel(context.Background())
 		go util.Log(ctx)
@@ -47,7 +49,7 @@ func main() {
 	} else {
 		fmt.Println("当前未登录，请登录")
 		user.Login(func() {
-			os.Remove(conf.QrPath)
+			os.Remove(filepath.Join(conf.ExecDir, conf.QrPath))
 			fmt.Println("登录")
 			main()
 		})
