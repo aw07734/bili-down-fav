@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-func MakeJson() map[string]string {
+func MakeOutDirCache() map[string]string {
 	context := filepath.Join(conf.ExecDir, conf.Get("file", "out_dir"))
 	files, err := os.ReadDir(context)
 	if err != nil {

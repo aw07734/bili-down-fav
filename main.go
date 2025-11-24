@@ -30,7 +30,7 @@ func main() {
 		fmt.Println("视频数量：", len(favs))
 		go util.Log(ctx)
 
-		mid2Name := outdir.MakeJson()
+		mid2Name := outdir.MakeOutDirCache()
 		threads, _ := strconv.Atoi(conf.Get("file", "multi_download"))
 		if threads > 0 {
 			// 限制并发数量
