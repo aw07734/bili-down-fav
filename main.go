@@ -2,6 +2,7 @@ package main
 
 import (
 	"bili-down-fav/src/bili/fav"
+	"bili-down-fav/src/bili/outdir"
 	"bili-down-fav/src/bili/user"
 	"bili-down-fav/src/bili/video"
 	"bili-down-fav/src/conf"
@@ -19,12 +20,17 @@ func main() {
 	if curUser.IsLogin {
 		fmt.Println("当前用户：" + curUser.Uname)
 		fmt.Println("当前收藏夹：" + conf.Get("fav", "d_folder"))
+
 		favs := fav.ListForDownloads(fav.ListFavFolder(curUser.Mid))
+		if len(favs) == 0 {
+			fmt.Println("当前收藏夹无视频可下载")
+			return
+		}
 		ctx, cancel := context.WithCancel(context.Background())
+		fmt.Println("视频数量：", len(favs))
 		go util.Log(ctx)
 
-		fmt.Println("视频数量：", len(favs))
-
+		mid2Name := outdir.MakeJson()
 		threads, _ := strconv.Atoi(conf.Get("file", "multi_download"))
 		if threads > 0 {
 			// 限制并发数量
@@ -36,7 +42,7 @@ func main() {
 				ch <- v
 				bvid := v.Bvid
 				go func() {
-					video.Download(bvid)
+					video.Download(bvid, mid2Name)
 					wg.Done()
 					<-ch
 				}()

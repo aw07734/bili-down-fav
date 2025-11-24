@@ -23,7 +23,7 @@ func videoInfo(bvid string) *Info {
 	return info
 }
 
-func Download(bvid string) {
+func Download(bvid string, mid2Name map[string]string) {
 	vinfo := videoInfo(bvid)
 	if vinfo.Code != 0 {
 		util.LogFail(bvid, vinfo.Message, nil)
@@ -33,16 +33,23 @@ func Download(bvid string) {
 		for _, page := range vinfo.Data.Pages {
 			owner := vinfo.Data.Owner
 			title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
-			context := owner.Name + "(" + strconv.Itoa(owner.Mid) + ")/" + title
+			context := makeContext(owner.Mid, owner.Name, mid2Name) + "/" + title
 			download_page(bvid, makeTitleLegal(page.Part), context, page.Cid)
 		}
 	} else {
 		owner := vinfo.Data.Owner
 		title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
-		context := owner.Name + "(" + strconv.Itoa(owner.Mid) + ")"
+		context := makeContext(owner.Mid, owner.Name, mid2Name)
 		download_page(bvid, title, context, vinfo.Data.Cid)
 	}
+}
 
+// 避免 UP 主修改名称导致重复下载
+func makeContext(mid int, ownerName string, mid2Name map[string]string) string {
+	if name, ok := mid2Name[strconv.Itoa(mid)]; ok {
+		return name
+	}
+	return ownerName + "(" + strconv.Itoa(mid) + ")"
 }
 
 func download_page(bvid, title, context string, cid int) {

@@ -18,14 +18,20 @@ func ListFavFolder(mid int) *FolderResp {
 	return folders
 }
 
-func ListForDownloads(folders *FolderResp) []Media {
-	var mlid int
+func filterFolder(folders *FolderResp, dFolder string) int {
 	for _, v := range folders.Data.List {
-		if v.Title == conf.Get("fav", "d_folder") {
-			mlid = v.Id
+		if v.Title == dFolder {
+			return v.Id
 		}
 	}
+	return 0
+}
 
+func ListForDownloads(folders *FolderResp) []Media {
+	mlid := filterFolder(folders, conf.Get("fav", "d_folder"))
+	if mlid == 0 {
+		return []Media{}
+	}
 	url := "https://api.bilibili.com/x/v3/fav/resource/list"
 	content := new(ContentResp)
 	var array []Media
