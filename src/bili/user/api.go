@@ -4,9 +4,9 @@ import (
 	"bili-down-fav/src/conf"
 	"bili-down-fav/src/util"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,6 +26,7 @@ func CurrentUser() *Info {
 	if resp, err := util.Http.R().
 		Get(url); err == nil {
 		log.Println("结束获取用户信息")
+		log.Println(util.Http.Header.Get("cookie"))
 		json.Unmarshal(resp.Body(), userInfo)
 	}
 	return userInfo
@@ -49,12 +50,12 @@ func check(qrcode string, callback func()) {
 				pair := strings.Split(v, ";")
 				kv := strings.Split(pair[0], "=")
 				util.CookieList[kv[0]] = kv[1]
+				log.Println("保存Cookie：", kv[0], "=", kv[1])
 				conf.Save("cookie", kv[0], kv[1])
 			}
 			callback()
 			break
 		} else {
-			log.Println(loginInfo.Data.Message)
 			if loginInfo.Data.Code == 86038 {
 				break
 			}
@@ -70,10 +71,11 @@ func qr() string {
 	if resp, err := util.Http.R().Get(url); err == nil {
 		json.Unmarshal(resp.Body(), qrUrl)
 	}
-	if err := qrcode.WriteFile(qrUrl.Data.Url, qrcode.Medium, 256, filepath.Join(conf.ExecDir, conf.QrPath)); err != nil {
+	qrCodeStr, err := qrcode.New(qrUrl.Data.Url, qrcode.Medium)
+	if err != nil {
 		log.Println("生成二维码失败：", err)
 		return ""
 	}
-	log.Println("二维码已生成至" + conf.QrPath)
+	fmt.Println(qrCodeStr.ToSmallString(false))
 	return qrUrl.Data.QrcodeKey
 }

@@ -9,8 +9,6 @@ import (
 	"bili-down-fav/src/util"
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	"sync"
 )
@@ -55,7 +53,6 @@ func main() {
 	} else {
 		fmt.Println("当前未登录，请登录")
 		user.Login(func() {
-			os.Remove(filepath.Join(conf.ExecDir, conf.QrPath))
 			fmt.Println("登录")
 			main()
 		})
