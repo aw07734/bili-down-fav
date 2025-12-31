@@ -16,7 +16,6 @@ import (
 func Login(callback func()) {
 	code := qr()
 	check(code, callback)
-
 }
 
 func CurrentUser() *Info {
