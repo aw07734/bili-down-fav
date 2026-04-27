@@ -6,15 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 )
-
-func init() {
-	if runtime.GOOS == "windows" {
-		dir, _ := os.Getwd()
-		os.Setenv("Path", os.Getenv("Path")+";"+dir+"/ffmpeg/bin;")
-	}
-}
 
 func Combine(video string, audio string, out string) {
 	createDir(out)
