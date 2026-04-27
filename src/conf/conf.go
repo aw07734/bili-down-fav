@@ -10,7 +10,6 @@ import (
 
 const (
 	IniPath = "assets/config.ini"
-	QrPath  = "assets/qr.png"
 )
 
 var ExecDir, _ = getExecDir()
