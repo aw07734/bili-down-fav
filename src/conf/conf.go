@@ -10,13 +10,19 @@ import (
 )
 
 const (
-	cookiePath = "assets/cookie.ini"
-	configPath = "assets/config.json"
+	cookieRelativePath = "assets/cookie.ini"
+	configRelativePath = "assets/config.json"
 )
 
-var ExecDir, _ = getExecDir()
-var ConfigInfo, _ = readConfig()
-var cookieFile, _ = ini.Load(filepath.Join(ExecDir, cookiePath))
+var ExecDir string
+var ConfigInfo *Config
+var cookieFile *ini.File
+
+func init() {
+	ExecDir, _ = getExecDir()
+	ConfigInfo, _ = readConfig()
+	cookieFile, _ = ini.Load(filepath.Join(ExecDir, cookieRelativePath))
+}
 
 func List(section string) map[string]string {
 	return cookieFile.Section(section).KeysHash()
@@ -28,11 +34,12 @@ func Get(section string, key string) string {
 
 func Save(section string, key string, value string) error {
 	cookieFile.Section(section).Key(key).SetValue(value)
-	return cookieFile.SaveTo(cookiePath)
+	return cookieFile.SaveTo(filepath.Join(ExecDir, cookieRelativePath))
 }
 
 func readConfig() (*Config, error) {
-	configStr, err := os.ReadFile(configPath)
+	configFullPath := filepath.Join(ExecDir, configRelativePath)
+	configStr, err := os.ReadFile(configFullPath)
 	if err != nil {
 		return nil, err
 	}
