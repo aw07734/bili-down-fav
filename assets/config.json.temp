@@ -1,0 +1,23 @@
+{
+    "multi_download": 3,
+    "remove_temp": true,
+    "json_dir": "out/json",
+    "temp_dir": "out/temp",
+    "favs": [
+        {
+            "folder": "aaa",
+            "out_dir": "out/aaa",
+            "flatmap": false
+        },
+        {
+            "folder": "awafa",
+            "out_dir": "out/afasfe",
+            "flatmap": true
+        }
+    ],
+    "log": {
+        "level": "error",
+        "success": "out/log/success.log",
+        "fail": "out/log/fail.log"
+    }
+}

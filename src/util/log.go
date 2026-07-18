@@ -17,11 +17,16 @@ var fw *bufio.Writer
 func init() {
 	success = make(chan string)
 	fail = make(chan string)
-	successPath := filepath.Join(conf.ExecDir, conf.Get("log", "success"))
-	failPath := filepath.Join(conf.ExecDir, conf.Get("log", "fail"))
+	successPath := filepath.Join(conf.ExecDir, conf.ConfigInfo.Log.Success)
+	failPath := filepath.Join(conf.ExecDir, conf.ConfigInfo.Log.Fail)
 	os.Remove(successPath)
 	os.Remove(failPath)
-	os.MkdirAll(filepath.Dir(conf.Get("log", "success")), os.ModePerm)
+	successDir := filepath.Dir(successPath)
+	os.MkdirAll(successDir, os.ModePerm)
+	failDir := filepath.Dir(failPath)
+	if failDir != successDir {
+		os.MkdirAll(failDir, os.ModePerm)
+	}
 	sFile, _ := os.Create(successPath)
 	fFile, _ := os.Create(failPath)
 	sw = bufio.NewWriter(sFile)

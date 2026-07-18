@@ -23,39 +23,43 @@ func videoInfo(bvid string) *Info {
 	return info
 }
 
-func Download(bvid string, mid2Name map[string]string) {
+func Download(bvid string, mid2Name map[string]string, currentFav *conf.Fav) {
 	vinfo := videoInfo(bvid)
 	if vinfo.Code != 0 {
 		util.LogFail(bvid, vinfo.Message, nil)
 		return
 	}
 	if len(vinfo.Data.Pages) > 1 {
-		for _, page := range vinfo.Data.Pages {
-			owner := vinfo.Data.Owner
-			title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
-			context := makeContext(owner.Mid, owner.Name, mid2Name) + "/" + title
-			download_page(bvid, makeTitleLegal(page.Part), context, page.Cid)
+		for index := range vinfo.Data.Pages {
+			page := vinfo.Data.Pages[index]
+			oFile, title := makeFile(bvid, vinfo, mid2Name, currentFav)
+			download_page(bvid, oFile, title, page.Cid)
 		}
 	} else {
-		owner := vinfo.Data.Owner
-		title := makeTitleLegal(vinfo.Data.Title) + "(" + bvid + ")"
-		context := makeContext(owner.Mid, owner.Name, mid2Name)
-		download_page(bvid, title, context, vinfo.Data.Cid)
+		oFile, title := makeFile(bvid, vinfo, mid2Name, currentFav)
+		download_page(bvid, oFile, title, vinfo.Data.Cid)
 	}
 }
 
-// 避免 UP 主修改名称导致重复下载
-func makeContext(mid int, ownerName string, mid2Name map[string]string) string {
-	if name, ok := mid2Name[strconv.Itoa(mid)]; ok {
-		return name
+func makeFile(bvid string, vInfo *Info, mid2Name map[string]string, currentFav *conf.Fav) (string, string) {
+	title := makeTitleLegal(vInfo.Data.Title) + "(" + bvid + ")"
+	var relativePath string
+	if currentFav.Flatmap {
+		relativePath = title + ".mkv"
+	} else {
+		owner := vInfo.Data.Owner
+		if name, ok := mid2Name[strconv.Itoa(owner.Mid)]; ok {
+			relativePath = name + "/" + title + ".mkv"
+		} else {
+			relativePath = owner.Name + "(" + strconv.Itoa(owner.Mid) + ")" + "/" + title + ".mkv"
+		}
 	}
-	return ownerName + "(" + strconv.Itoa(mid) + ")"
+	return filepath.Join(conf.ExecDir, currentFav.OutDir, relativePath), title
 }
 
-func download_page(bvid, title, context string, cid int) {
-	oFile := outputFile(title, context)
+func download_page(bvid, oFile, title string, cid int) {
 	if fileExist(oFile) {
-		log.Println("跳过:", title)
+		log.Println("跳过:", oFile)
 		return
 	}
 	url := "https://api.bilibili.com/x/player/playurl"
@@ -70,7 +74,7 @@ func download_page(bvid, title, context string, cid int) {
 		Get(url); err == nil {
 
 		// 保存json文件
-		jsonDir := filepath.Join(conf.ExecDir, conf.Get("file", "json_dir"))
+		jsonDir := filepath.Join(conf.ExecDir, conf.ConfigInfo.JsonDir)
 		if jsonDir != "" {
 			os.MkdirAll(jsonDir, os.ModePerm)
 			os.WriteFile(jsonDir+"/"+bvid+"_video.json", resp.Body(), fs.ModePerm)
@@ -114,19 +118,19 @@ func download_page(bvid, title, context string, cid int) {
 			} else {
 				hasAudio = false
 			}
-			toFile(bvid, title, context, vUrl, bestVideo.BackupUrl, hasAudio, aUrl, aBackUrl)
+			toFile(bvid, oFile, title, vUrl, bestVideo.BackupUrl, hasAudio, aUrl, aBackUrl)
 		} else if len(info.Data.Durl) > 0 {
 			dual := info.Data.Durl[0]
-			toFile(bvid, title, context, dual.URL, dual.BackupURL, false, "", nil)
+			toFile(bvid, oFile, title, dual.URL, dual.BackupURL, false, "", nil)
 		} else {
-			util.LogFail(bvid, title, "无可用视频")
+			util.LogFail(bvid, oFile, "无可用视频")
 			// return
 		}
 	}
 }
 
-func toFile(bvid, title, context, vUrl string, vBackupUrl []string, hasAudio bool, aUrl string, aBackupUrl []string) {
-	prefix := filepath.Join(conf.ExecDir, conf.Get("file", "temp_dir"))
+func toFile(bvid, oFile, title, vUrl string, vBackupUrl []string, hasAudio bool, aUrl string, aBackupUrl []string) {
+	prefix := filepath.Join(conf.ExecDir, conf.ConfigInfo.TempDir)
 	vFile := prefix + "/video_" + title + ".m4s"
 	aFile := prefix + "/audio_" + title + ".m4s"
 
@@ -171,13 +175,12 @@ func toFile(bvid, title, context, vUrl string, vBackupUrl []string, hasAudio boo
 	}
 
 	// log.Println("混流")
-	oFile := outputFile(title, context)
 	if hasAudio {
 		util.Combine(vFile, aFile, oFile)
 	} else {
 		util.Convert(vFile, oFile)
 	}
-	if conf.Get("file", "remove_temp") == "true" {
+	if conf.ConfigInfo.RemoveTemp {
 		// log.Println("移除临时文件")
 		os.Remove(vFile)
 		os.Remove(aFile)
@@ -219,10 +222,6 @@ func makeTitleLegal(str string) string {
 		}
 	}
 	return result
-}
-
-func outputFile(title, context string) string {
-	return filepath.Join(conf.ExecDir, conf.Get("file", "out_dir")+"/"+context+"/"+title+".mkv")
 }
 
 func fileExist(filePath string) bool {

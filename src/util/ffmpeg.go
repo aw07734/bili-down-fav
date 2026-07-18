@@ -11,7 +11,7 @@ import (
 func Combine(video string, audio string, out string) {
 	createDir(out)
 	cmd := exec.Command("ffmpeg", "-i", video, "-i", audio, "-c", "copy", out,
-		"-loglevel", conf.Get("log", "level"),
+		"-loglevel", conf.ConfigInfo.Log.Level,
 		"-y")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
@@ -22,7 +22,7 @@ func Combine(video string, audio string, out string) {
 func Convert(video string, out string) {
 	createDir(out)
 	cmd := exec.Command("ffmpeg", "-i", video, "-c", "copy", out,
-		"-loglevel", conf.Get("log", "level"),
+		"-loglevel", conf.ConfigInfo.Log.Level,
 		"-y")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

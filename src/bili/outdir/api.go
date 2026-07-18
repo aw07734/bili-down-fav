@@ -7,8 +7,8 @@ import (
 	"regexp"
 )
 
-func MakeOutDirCache() map[string]string {
-	context := filepath.Join(conf.ExecDir, conf.Get("file", "out_dir"))
+func MakeOutDirCache(outDir string) map[string]string {
+	context := filepath.Join(conf.ExecDir, outDir)
 	files, err := os.ReadDir(context)
 	if err != nil {
 		return nil
@@ -23,11 +23,13 @@ func MakeOutDirCache() map[string]string {
 	}
 	mid2Name := make(map[string]string)
 	for _, file := range files {
-		fileName := file.Name()
-		matches := re.FindStringSubmatch(fileName)
-		if len(matches) > 1 {
-			mid := matches[1]
-			mid2Name[mid] = fileName
+		if file.IsDir() {
+			fileName := file.Name()
+			matches := re.FindStringSubmatch(fileName)
+			if len(matches) > 1 {
+				mid := matches[1]
+				mid2Name[mid] = fileName
+			}
 		}
 	}
 	return mid2Name

@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,23 +10,35 @@ import (
 )
 
 const (
-	IniPath = "assets/config.ini"
+	cookiePath = "assets/cookie.ini"
+	configPath = "assets/config.json"
 )
 
 var ExecDir, _ = getExecDir()
-var file, _ = ini.Load(filepath.Join(ExecDir, IniPath))
+var ConfigInfo, _ = readConfig()
+var cookieFile, _ = ini.Load(filepath.Join(ExecDir, cookiePath))
 
 func List(section string) map[string]string {
-	return file.Section(section).KeysHash()
+	return cookieFile.Section(section).KeysHash()
 }
 
 func Get(section string, key string) string {
-	return file.Section(section).Key(key).String()
+	return cookieFile.Section(section).Key(key).String()
 }
 
 func Save(section string, key string, value string) error {
-	file.Section(section).Key(key).SetValue(value)
-	return file.SaveTo(IniPath)
+	cookieFile.Section(section).Key(key).SetValue(value)
+	return cookieFile.SaveTo(cookiePath)
+}
+
+func readConfig() (*Config, error) {
+	configStr, err := os.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	config := new(Config)
+	json.Unmarshal(configStr, config)
+	return config, nil
 }
 
 func getExecDir() (string, error) {

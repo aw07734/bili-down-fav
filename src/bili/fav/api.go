@@ -1,7 +1,6 @@
 package fav
 
 import (
-	"bili-down-fav/src/conf"
 	"bili-down-fav/src/util"
 	"encoding/json"
 	"strconv"
@@ -27,8 +26,8 @@ func filterFolder(folders *FolderResp, dFolder string) int {
 	return 0
 }
 
-func ListForDownloads(folders *FolderResp) []Media {
-	mlid := filterFolder(folders, conf.Get("fav", "d_folder"))
+func ListForDownloads(folders *FolderResp, folder string) []Media {
+	mlid := filterFolder(folders, folder)
 	if mlid == 0 {
 		return []Media{}
 	}
