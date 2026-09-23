@@ -28,10 +28,6 @@ func List(section string) map[string]string {
 	return cookieFile.Section(section).KeysHash()
 }
 
-func Get(section string, key string) string {
-	return cookieFile.Section(section).Key(key).String()
-}
-
 func Save(section string, key string, value string) error {
 	cookieFile.Section(section).Key(key).SetValue(value)
 	return cookieFile.SaveTo(filepath.Join(ExecDir, cookieRelativePath))

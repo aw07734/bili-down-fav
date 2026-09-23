@@ -45,7 +45,7 @@ func makeFile(bvid string, vInfo *Info, mid2Name map[string]string, currentFav *
 	title := makeTitleLegal(vInfo.Data.Title) + "(" + bvid + ")"
 	var relativePath string
 	if currentFav.Flatmap {
-		relativePath = title + ".mkv"
+		relativePath = strconv.Itoa(vInfo.Data.Owner.Mid) + "__" + title + ".mkv"
 	} else {
 		owner := vInfo.Data.Owner
 		if name, ok := mid2Name[strconv.Itoa(owner.Mid)]; ok {
